@@ -12,6 +12,7 @@ struct node {
 #define TEN FIVE FIVE
 #define FIFTY TEN TEN TEN TEN TEN
 #define HUNDRED FIFTY FIFTY
+#define THOUSAND HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED
 
 Result* measure(int times, int bytes) {
     srand(time(NULL));
@@ -27,7 +28,7 @@ Result* measure(int times, int bytes) {
     times /= 100;
     clock_t start = clock();
     for(int count = 0; count < times; count++) {
-        HUNDRED
+        THOUSAND
     }
 
     double timeTaken = (double)(clock() - start) / times * 1000; 
