@@ -14,7 +14,7 @@ struct node {
 #define HUNDRED FIFTY FIFTY
 #define THOUSAND HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED HUNDRED
 
-Result* measure(int times, int bytes) {
+double get_benchmark_sequence(int times, int bytes) {
     srand(time(NULL));
     struct node *array;
     int array_size = bytes / sizeof(struct node);
@@ -25,14 +25,31 @@ Result* measure(int times, int bytes) {
     }
     
     struct node *p = &array[0];
-    times /= 100;
     clock_t start = clock();
     for(int count = 0; count < times; count++) {
         THOUSAND
     }
 
-    double timeTaken = (double)(clock() - start) / times * 1000; 
+    delete[] array;
+    return (double)(clock() - start) / times * 1000;
+}
+
+double get_benchmark_random(int times, int bytes) {
+    srand(time(NULL));
+    struct node *array;
+    int array_size = bytes / sizeof(struct node);
+    array = new node[array_size];
+    
+    for(unsigned long i = 0; i < array_size; i++) {
+        array[i].next = &array[(i + 34) % array_size];
+    }
+    
+    struct node *p = &array[0];
+    clock_t start = clock();
+    for(int count = 0; count < times; count++) {
+        THOUSAND
+    }
 
     delete[] array;
-    return new Result(bytes / 1024.0, timeTaken);
+    return (double)(clock() - start) / times * 1000;
 }

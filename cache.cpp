@@ -1,14 +1,25 @@
 #include <functional>
 #include <fstream>
+#include <vector>
 #include <stdlib.h>
 #include <stdio.h>
-#include "result.h"
 #include "benchmark.cpp"
 
-void print_progress(double current, double maximum) {
+const int COLOR_RED = 31;
+const int COLOR_GREEN = 32;
+const int COLOR_YELLOW = 33;
+const int COLOR_BLUE = 34;
+const int COLORS[] = {COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE}; 
+
+typedef std::function<double(int, int)> BenchmarkFunction;
+
+void print_progress(double kilobytes, double current, double maximum, int color) {
+    printf("%07.2f %07.1f ", kilobytes, current);
+
     int progress_width = 70;
     int progress = current / maximum * progress_width;
-    printf("[\033[31m");
+
+    printf("[\033[%dm", color);
     for (int i = 0; i < progress_width; ++i) {
         if (i <= progress) {
             printf("=");
@@ -16,31 +27,33 @@ void print_progress(double current, double maximum) {
             printf(" ");
         }
     }
-    printf("\033[0m]");
+    printf("\033[0m]\n");
 }
 
-void start_benchmark(std::function<Result*(double, double)> benchmark_function, std::string file) {
+void start_benchmark(std::vector<BenchmarkFunction> benchmarks, std::string file) {
     std::ofstream out(file);
     out << "{ \"data\": [";
 
     int min_size_bytes = 1024;
     int max_size_bytes = 1024 * 1024 * 8;
-    int times = max_size_bytes / 100;
+    int times = max_size_bytes / 100 / 2;
     double step = 1.1;
 
-    for(double i = min_size_bytes; i < max_size_bytes; i *= step) {
-        Result* result = measure(times, i);
-        out << "{\"point\": " << result->point << ", \"value\": " << result->value;
+    for(double bytes = min_size_bytes; bytes < max_size_bytes; bytes *= step) {
+        double kilobytes = bytes / 1024;
+        out << "{\"point\": " << kilobytes;
+        for(int i = 0; i < benchmarks.size(); ++i) {
+            double time = benchmarks.at(i)(times, bytes);
+            out << ", \"value\": " << time;
 
-        if (i * step > max_size_bytes) {
+            print_progress(kilobytes, time, 25300.0, COLORS[i]);
+        }
+
+        if (bytes * step > max_size_bytes) {
             out << "}";
         } else {
             out << "},";
         }
-
-        printf("%07.2f %07.1f ", result->point, result->value);
-        print_progress(result->value, 25300.0);
-        printf("\n");
     }
 
     out << "]}";
@@ -48,6 +61,9 @@ void start_benchmark(std::function<Result*(double, double)> benchmark_function, 
 }
 
 int main() {
-    start_benchmark(measure, "www/data.json");
+    std::vector<BenchmarkFunction> benchmarks;
+    benchmarks.push_back(get_benchmark_sequence);
+    benchmarks.push_back(get_benchmark_random);
+    start_benchmark(benchmarks, "www/data.json");
     system("./open_graph.sh");
 }
