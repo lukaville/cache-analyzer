@@ -30,7 +30,7 @@ void print_progress(double kilobytes, double current, double maximum, int color)
     printf("\033[0m]\n");
 }
 
-void start_benchmark(std::vector<BenchmarkFunction> benchmarks, std::string file) {
+void start_benchmarks(std::vector<BenchmarkFunction> benchmarks, std::string file) {
     std::ofstream out(file);
     out << "{ \"data\": [";
 
@@ -41,11 +41,11 @@ void start_benchmark(std::vector<BenchmarkFunction> benchmarks, std::string file
 
     for(double bytes = min_size_bytes; bytes < max_size_bytes; bytes *= step) {
         double kilobytes = bytes / 1024;
+        
         out << "{\"point\": " << kilobytes;
         for(int i = 0; i < benchmarks.size(); ++i) {
             double time = benchmarks.at(i)(times, bytes);
-            out << ", \"value\": " << time;
-
+            out << ", \"value" << i << "\": " << time;
             print_progress(kilobytes, time, 25300.0, COLORS[i]);
         }
 
@@ -62,8 +62,9 @@ void start_benchmark(std::vector<BenchmarkFunction> benchmarks, std::string file
 
 int main() {
     std::vector<BenchmarkFunction> benchmarks;
-    benchmarks.push_back(get_benchmark_sequence);
+    benchmarks.push_back(get_benchmark_sequence_34);
     benchmarks.push_back(get_benchmark_random);
-    start_benchmark(benchmarks, "www/data.json");
+    benchmarks.push_back(get_benchmark_sequence);
+    start_benchmarks(benchmarks, "www/data.json");
     system("./open_graph.sh");
 }
